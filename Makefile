@@ -23,8 +23,8 @@ ASMFLAGS = -I$(INCLUDEDIR)
 LDFLAGS = -g -melf_i386
 
 SYSOBJ = \
-	interrupt.o \
 	entry.o \
+	interrupt.o \
 	sys_call_table.o \
 	io.o \
 	sched.o \
