@@ -1,5 +1,7 @@
 bochsout.txt
 *.out
+*.o
+*.s
 system
 bootsect
 *.bin
