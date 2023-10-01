@@ -84,6 +84,7 @@ void setIdt()
 
   /* ADD INITIALIZATION CODE FOR INTERRUPT VECTOR */
   setInterruptHandler(32, clock_handler, 0);
+  setTrapHandler(0x80, sys_gettime, 0);
 
   set_idt_reg(&idtR);
 }
@@ -91,4 +92,6 @@ void setIdt()
 void clock_routine()
 {
   zeos_show_clock();
+  extern unsigned int zeos_ticks;
+  zeos_ticks++;
 }
