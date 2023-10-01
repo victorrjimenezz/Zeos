@@ -5,6 +5,7 @@ bochsout.txt
 system
 bootsect
 *.bin
+.idea
 user
 user.out
 build
