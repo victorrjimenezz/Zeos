@@ -7,5 +7,4 @@
 #define NULLBUFF -35
 #define INVSIZE -77
 
-
 #endif //ZEOS_ERROR_CODE_H

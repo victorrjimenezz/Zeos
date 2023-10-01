@@ -11,7 +11,14 @@ int __attribute__ ((__section__(".text.main")))
      /* __asm__ __volatile__ ("mov %0, %%cr3"::"r" (0) ); */
 
 
-    char test_buffer[19] = "Today's  conference";
+    int current_time = gettime();
+    for (int i = 0; i < 2000000; ++i)
+    {
+        current_time = gettime();
+    }
+
+    char test_buffer[32];
+    itoa(current_time, test_buffer);
     int ret = write(1, test_buffer, 19);
   while(1) { }
 }
