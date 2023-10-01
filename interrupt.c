@@ -80,12 +80,13 @@ void setIdt()
   /* Program interrups/exception service routines */
   idtR.base  = (DWord)idt;
   idtR.limit = IDT_ENTRIES * sizeof(Gate) - 1;
-  
-  setInterruptHandler(33, &keyboard_handler, 0);
+
   set_handlers();
 
   /* ADD INITIALIZATION CODE FOR INTERRUPT VECTOR */
-  setInterruptHandler(32, clock_handler, 0);
+  setInterruptHandler(33, &keyboard_handler, 0);
+  setInterruptHandler(32, &clock_handler, 0);
+  setTrapHandler(0x80, &sys_call_handler, 3);
 
   set_idt_reg(&idtR);
 }

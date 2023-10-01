@@ -4,6 +4,7 @@
 
 #include <asm.h>
 #include <segment.h>
+#include <error_code.h>
 
 
 /**************************************************/
@@ -35,7 +36,7 @@
 /**                                              **/
 /**************************************************/
 
-#define SAVE_ALL 
+#define SAVE_ALL \
       pushl %gs; \
       pushl %fs; \
       pushl %es; \
@@ -51,7 +52,7 @@
       movl %edx, %ds;           \
       movl %edx, %es
 
-#define RESTORE_ALL 
+#define RESTORE_ALL \
       popl %edx; \
       popl %ecx; \
       popl %ebx; \
@@ -68,16 +69,31 @@
       movb $0x20, %al ; \
       outb %al, $0x20
 
-ENTRY(keyboard_handler) \
-      SAVE_ALL ; \
-      EOI ; \
-      call keyboard_routine ; \
-      RESTORE_ALL ; \
+ENTRY(keyboard_handler)
+      SAVE_ALL
+      EOI
+      call keyboard_routine
+      RESTORE_ALL
       iret
 
 ENTRY(clock_handler)
-      SAVE_ALL; \
-      EOI; \
-      call clock_routine; \
-      RESTORE_ALL; \
+      SAVE_ALL
+      EOI
+      call clock_routine
+      RESTORE_ALL
+      iret
+
+ENTRY(sys_call_handler)
+      SAVE_ALL
+      cmpl $0, %eax
+      jl err
+      cmpl $MAX_SYSCALL, %eax
+      jg err
+      call *sys_call_table(, %eax, 0x04)
+      jmp fin
+err:
+      movl $ENOSYS, %eax
+fin:
+      movl %eax, 0x18(%esp)
+      RESTORE_ALL
       iret
