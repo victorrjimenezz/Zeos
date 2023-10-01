@@ -35,7 +35,7 @@
 /**                                              **/
 /**************************************************/
 
-#define SAVE_ALL \
+#define SAVE_ALL 
       pushl %gs; \
       pushl %fs; \
       pushl %es; \
@@ -51,7 +51,7 @@
       movl %edx, %ds;           \
       movl %edx, %es
 
-#define RESTORE_ALL \
+#define RESTORE_ALL 
       popl %edx; \
       popl %ecx; \
       popl %ebx; \
@@ -73,4 +73,11 @@ ENTRY(keyboard_handler) \
       EOI ; \
       call keyboard_routine ; \
       RESTORE_ALL ; \
+      iret
+
+ENTRY(clock_handler)
+      SAVE_ALL; \
+      EOI; \
+      call clock_routine; \
+      RESTORE_ALL; \
       iret
