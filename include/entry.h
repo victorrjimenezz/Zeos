@@ -8,5 +8,7 @@
 void keyboard_handler();
 void clock_handler();
 void sys_call_handler();
+void sysenter_handler();
+void writeMSR(int index, void *value);
 
 #endif  /* __ENTRY_H__ */

@@ -2,13 +2,20 @@
 #include <segment.h>
 
 ENTRY(write)
+    pushl %ebp
     pushl %ebx
-    movl 8(%esp), %edx
-    movl 12(%esp), %ecx
-    movl 16(%esp), %ebx
+    pushl r_write
+    movl %esp, %ebp
+    movl 16(%esp), %edx
+    movl 20(%esp), %ecx
+    movl 24(%esp), %ebx
     movl $4, %eax
-    int $0x80
+    sysenter
+r_write:  
+    addl $4, %esp
     popl %ebx
+    popl %ebp
+    movl %ebp, %esp
     ret
 
 ENTRY(gettime)

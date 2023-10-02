@@ -75,7 +75,6 @@ void setTrapHandler(int vector, void (*handler)(), int maxAccessibleFromPL)
   idt[vector].highOffset      = highWord((DWord)handler);
 }
 
-
 void setIdt()
 {
   /* Program interrups/exception service routines */
