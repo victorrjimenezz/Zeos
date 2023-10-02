@@ -19,6 +19,7 @@ int __attribute__ ((__section__(".text.main")))
 
     char test_buffer[32];
     itoa(current_time, test_buffer);
-    int ret = write(1, test_buffer, 19);
+    int ret = write(1, test_buffer, strlen(test_buffer));
+    write(1, test_buffer, strlen(test_buffer));
   while(1) { }
 }
