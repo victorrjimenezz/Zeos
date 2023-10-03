@@ -86,9 +86,51 @@ void setIdt()
   /* ADD INITIALIZATION CODE FOR INTERRUPT VECTOR */
   setInterruptHandler(33, &keyboard_handler, 0);
   setInterruptHandler(32, &clock_handler, 0);
+  setInterruptHandler(14, &segmentation_fault_handler, 3);
   setTrapHandler(0x80, &sys_call_handler, 3);
 
   set_idt_reg(&idtR);
+}
+
+void segmentation_fault_routine(int eip, int error_code)
+{
+    char message[] = "There was a page fault with error code ";
+    for (int i = 0; message[i] != '\0'; ++i)
+        printccolor(message[i], CCRed);
+
+    // Store the EIP as a hex.
+    int index = 0;
+    char hex_value[32] = "";
+    while (error_code)
+    {
+        hex_value[index++] = "0123456789"[error_code % 10];
+        error_code /= 10;
+    }
+
+    // Write the error_code value to the screen.
+    while (index > 0)
+        printccolor(hex_value[--index], CCRed);
+
+    printccolor(' ', CCRed);
+    printccolor('a', CCRed);
+    printccolor('t', CCRed);
+    printccolor(':', CCRed);
+    printccolor(' ', CCRed);
+    printccolor('0', CCRed);
+    printccolor('x', CCRed);
+
+    index = 0;
+    while (eip)
+    {
+        hex_value[index++] = "0123456789ABCDEF"[eip % 16];
+        eip /= 16;
+    }
+
+    // Write the EIP value to the screen.
+    while (index > 0)
+        printccolor(hex_value[--index], CCRed);
+
+    while (1);
 }
 
 void keyboard_routine()
