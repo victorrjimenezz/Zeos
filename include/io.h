@@ -11,6 +11,7 @@
 /**********************/
 
 Byte inb (unsigned short port);
+void printccolor(char c, unsigned int console_color);
 void printc(char c);
 void printc_xy(Byte x, Byte y, char c);
 void printk(char *string);

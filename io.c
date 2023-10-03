@@ -49,19 +49,24 @@ inline void BreakLine()
 
 }
 
+void printccolor(char c, unsigned int console_color)
+{
+    __asm__ __volatile__ ( "movb %0, %%al; outb $0xe9" ::"a"(c)); /* Magic BOCHS debug: writes 'c' to port 0xe9 */
+    if (c == '\n')
+        BreakLine();
+    else
+    {
+        Word ch = (Word) (c & 0x00FF) | console_color;
+        Word *screen = (Word *)0xb8000;
+        screen[(y * NUM_COLUMNS + x)] = ch;
+        if (++x >= NUM_COLUMNS)
+            BreakLine();
+    }
+}
+
 void printc(char c)
 {
-     __asm__ __volatile__ ( "movb %0, %%al; outb $0xe9" ::"a"(c)); /* Magic BOCHS debug: writes 'c' to port 0xe9 */
-  if (c == '\n')
-      BreakLine();
-  else
-  {
-      Word ch = (Word) (c & 0x00FF) | 0x0200;
-      Word *screen = (Word *)0xb8000;
-      screen[(y * NUM_COLUMNS + x)] = ch;
-      if (++x >= NUM_COLUMNS)
-          BreakLine();
-  }
+    printccolor(c, CCWhite);
 }
 
 void printc_xy(Byte mx, Byte my, char c)

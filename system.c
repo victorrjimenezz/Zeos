@@ -105,7 +105,7 @@ int __attribute__((__section__(".text.main")))
 
   
 
-  printk("Entering user mode...");
+  printk("Entering user mode... \n");
 
   enable_int();
   /*

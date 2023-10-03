@@ -12,6 +12,11 @@ typedef unsigned char       Byte;
 typedef unsigned short int  Word;
 typedef unsigned long       DWord;
 
+typedef enum {CCBlack = 0x0000, CCDarkBlue = 0x0100, CCMosquitoGreen = 0x0200, CCBlue = 0x0300,
+              CCRed = 0x0400, CCPurple = 0x0500, CCOrange = 0x0600, CCLightGray= 0x0700,
+              CCDarkGray = 0x0800, CCLightPurple = 0x0900, CCLightGreen = 0x0A00, CCLightBlue = 0x0B00,
+              CCLightRed = 0x0C00, CCPink = 0x0D00, CCLightYellow = 0x0E00, CCWhite = 0x0F00} ConsoleColor;
+
 #define highWord(address) (Word)(((address) >> 16) & 0xFFFF)
 #define lowWord(address) (Word)((address) & 0xFFFF)
 #define midByte(address) (Byte)(((address) >> 16) & 0xFF)
