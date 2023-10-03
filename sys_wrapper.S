@@ -1,5 +1,4 @@
 #include <asm.h>
-#include <segment.h>
 
 
 ENTRY(write)
@@ -18,9 +17,15 @@ ENTRY(write)
     movl $4, %eax
     sysenter
 r_write:
+    cmpl $0, %eax // si eax < 0 hi ha un error
+    jge w_no_err // else 
+
+    //movl %eax, errno
+    movl $-1, %eax
+
+w_no_err:
     popl %ebp
     addl $4, %esp
-    
     popl %ebx
     movl %ebp, %esp
     popl %ebp
@@ -29,4 +34,11 @@ r_write:
 ENTRY(gettime)
     movl $10, %eax
     int $0x80
+
+    cmpl $0, %eax // si eax < 0 hi ha un error
+    jge gt_no_err // else 
+
+    //movl %eax, errno
+    movl $-1, %eax
+gt_no_err:
     ret

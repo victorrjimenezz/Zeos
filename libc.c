@@ -3,7 +3,7 @@
  */
 
 #include <libc.h>
-
+#include <error_code.h>
 #include <types.h>
 
 int errno;
@@ -46,4 +46,43 @@ int strlen(char *a)
   while (a[i]!=0) i++;
   
   return i;
+}
+
+void perror(void) 
+{
+    char buff[] = "\nHi hagut un error: \n";
+
+    write(1, buff, strlen(buff));
+
+    switch(errno) 
+    {
+        case ENOSYS:
+            char missatge[] = "Aquest syscall no existeix, no implementat\n";
+            write(1, missatge, strlen(missatge));
+        break;
+
+        case EBADF:
+            char missatge[] = "File descriptor erroni\n";
+            write(1, missatge, strlen(missatge));
+        break;
+
+        case EACCES:
+            char missatge[] = "Permís denegat\n";
+            write(1, missatge, strlen(missatge));
+        break;
+
+        case NULLBUFF:
+            char missatge[] = "Buffer invalid\n";
+            write(1, missatge, strlen(missatge));
+        break;
+
+        case INVSIZE:
+            char missatge[] = "Tamany incorrecte del buffer\n";
+            write(1, missatge, strlen(missatge));
+        break;
+
+        default:
+
+
+    }
 }
