@@ -38,7 +38,7 @@ ENTRY(gettime)
     cmpl $0, %eax // si eax < 0 hi ha un error
     jge gt_no_err // else 
 
-    //movl %eax, errno
+    movl %eax, errno
     movl $-1, %eax
 gt_no_err:
     ret
