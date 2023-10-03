@@ -1,21 +1,29 @@
 #include <asm.h>
 #include <segment.h>
 
+
 ENTRY(write)
     pushl %ebp
-    pushl %ebx
-    pushl r_write
     movl %esp, %ebp
-    movl 16(%esp), %edx
-    movl 20(%esp), %ecx
-    movl 24(%esp), %ebx
+
+    pushl %ebx
+
+    movl 8(%ebp), %edx // Pas de paramatres
+    movl 12(%ebp), %ecx
+    movl 16(%ebp), %ebx
+
+    pushl $r_write // Adreça de retorn 
+    pushl %ebp // salvem el ebp d'aquesta funció 
+    movl %esp, %ebp // fiquem a ebp el esp per despres tornar
     movl $4, %eax
     sysenter
-r_write:  
-    addl $4, %esp
-    popl %ebx
+r_write:
     popl %ebp
+    addl $4, %esp
+    
+    popl %ebx
     movl %ebp, %esp
+    popl %ebp
     ret
 
 ENTRY(gettime)
