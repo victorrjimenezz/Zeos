@@ -20,7 +20,7 @@ r_write:
     cmpl $0, %eax // si eax < 0 hi ha un error
     jge w_no_err // else 
 
-    //movl %eax, errno
+    movl %eax, errno
     movl $-1, %eax
 
 w_no_err:

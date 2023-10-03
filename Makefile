@@ -26,7 +26,6 @@ SYSOBJ = \
 	entry.o \
 	interrupt.o \
 	sys_call_table.o \
-	sys_wrapper.o \
 	io.o \
 	sched.o \
 	sys.o \
