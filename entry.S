@@ -83,6 +83,12 @@ ENTRY(clock_handler)
       RESTORE_ALL
       iret
 
+ENTRY(segmentation_fault_handler)
+     movl (%esp), %ecx
+     movl 4(%esp), %edx
+     SAVE_ALL
+     call segmentation_fault_routine
+
 ENTRY(sys_call_handler)
       SAVE_ALL
       cmpl $0, %eax
