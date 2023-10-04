@@ -86,7 +86,8 @@ ENTRY(clock_handler)
 ENTRY(segmentation_fault_handler)
      movl (%esp), %ecx
      movl 4(%esp), %edx
-     SAVE_ALL
+     pushl %ecx
+     pushl %edx
      call segmentation_fault_routine
 
 ENTRY(sys_call_handler)
