@@ -79,6 +79,22 @@ void list_del(struct list_head *entry)
 }
 
 /**
+ * list_pop - pops queue's first element.
+ * @list: the list from which to pop.
+ * @ret: 0 if queue is empty, * to the popped element if not.
+ */
+struct list_head *list_pop(struct list_head *list)
+{
+	if (list->next == list)
+	    return 0;
+	
+	struct list_head * dequeued_element = list->next;
+	list_del(dequeued_element);
+	
+	return dequeued_element;
+}
+
+/**
  * list_is_last - tests whether @list is the last entry in list @head
  * @list: the entry to test
  * @head: the head of the list

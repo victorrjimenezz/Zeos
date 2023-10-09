@@ -39,13 +39,23 @@ int sys_write(int fd, char * buffer, int size)
     if (size < 0)
         return INVSIZE;
 
-    char local_buffer[size];
-    copy_from_user(buffer, local_buffer, size);
-
-    if (fd == ERROR)
-        return sys_write_error(local_buffer, size);
-
-    return sys_write_console(local_buffer, size);
+    char local_buffer[1024];
+    int total_bytes = 0;
+    while (size > 0)
+    {
+    	int current_bytes = size < 1024 ? size : 1024;
+        copy_from_user(buffer, local_buffer, current_bytes);
+        
+    	if (fd == ERROR)
+            total_bytes += sys_write_error(local_buffer, current_bytes);
+        else
+    	    total_bytes += sys_write_console(local_buffer, current_bytes);
+    	    
+        buffer += 1024;
+        size -= 1024;
+    }
+    
+    return total_bytes;
 }
 
 int sys_getpid()

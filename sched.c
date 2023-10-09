@@ -7,6 +7,8 @@
 #include <io.h>
 
 union task_union task[NR_TASKS]
+struct list_head freequeue;
+struct list_head readyqueue;
   __attribute__((__section__(".data.task")));
 
 #if 0
@@ -55,17 +57,38 @@ void cpu_idle(void)
 
 void init_idle (void)
 {
-
+    struct list_head *empty_process = list_pop(freequeue);
+    struct task_union * new_task = list_head_to_task_struct(empty_process);
+    //if (empty_process == 0)
+    new_task->task.PID = 0;
+    allocate_DIR(new_task->task);
+    char * stack_ptr = (char *)new_task->stack;
+    int * stack_int_ptr = (int *)stack_ptr[sizeof(task_struct)];
+    stack_int_ptr[0] = cpu_idle;
+    stack_int_ptr[1] = 0;
+    new_task->task.stack_ptr = &stack_int_ptr[2];
+    
 }
 
 void init_task1(void)
 {
 }
 
-
 void init_sched()
 {
+	INIT_LIST_HEAD(freequeue);	
+	INIT_LIST_HEAD(readyqueue);
+	for (int i = 0; i < NR_TASKS; ++i)
+	{
+	     list_add(task[i].task.list, freequeue);
+	}
+}
 
+struct task_struct *list_head_to_task_struct(struct list_head *l)
+{
+	char * address = (char*)l;
+	address -= sizeof(list_head) + 8;
+	return (struct task_struct *) address;
 }
 
 struct task_struct* current()
