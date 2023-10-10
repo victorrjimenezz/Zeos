@@ -5,10 +5,13 @@
 #include <sched.h>
 #include <mm.h>
 #include <io.h>
+#include "entry.h"
 
-union task_union task[NR_TASKS]
+union task_union task[NR_TASKS];
 struct list_head freequeue;
 struct list_head readyqueue;
+struct task_struct * idle_task;
+
   __attribute__((__section__(".data.task")));
 
 #if 0
@@ -57,37 +60,51 @@ void cpu_idle(void)
 
 void init_idle (void)
 {
-    struct list_head *empty_process = list_pop(freequeue);
-    struct task_union * new_task = list_head_to_task_struct(empty_process);
-    //if (empty_process == 0)
-    new_task->task.PID = 0;
-    allocate_DIR(new_task->task);
-    char * stack_ptr = (char *)new_task->stack;
-    int * stack_int_ptr = (int *)stack_ptr[sizeof(task_struct)];
-    stack_int_ptr[0] = cpu_idle;
+    struct list_head *empty_process = list_pop(&freequeue);
+    union task_union * task_union = (union task_union *) list_head_to_task_struct(empty_process);
+    idle_task = &task_union->task;
+    task_union->task.PID = 0;
+    allocate_DIR(&task_union->task);
+    char * stack_ptr = (char *)task_union->stack;
+    int * stack_int_ptr = (int *)(&stack_ptr[sizeof(struct task_struct)]);
+    stack_int_ptr[0] = (int) &cpu_idle;
     stack_int_ptr[1] = 0;
-    new_task->task.stack_ptr = &stack_int_ptr[2];
-    
+    task_union->task.stack_ptr = (int) &stack_int_ptr[2];
 }
 
 void init_task1(void)
 {
+    struct list_head *empty_process = list_pop(&freequeue);
+    union task_union * task_union = (union task_union *) list_head_to_task_struct(empty_process);
+    task_union->task.PID = 1;
+    allocate_DIR(&task_union->task);
+    set_user_pages(&task_union->task);
+
+    char * stack_ptr = (char *)task_union->stack;
+    int * stack_int_ptr = (int *)(&stack_ptr[sizeof(struct task_struct)]);
+    task_union->task.stack_ptr = (int) &stack_int_ptr[0];
+
+    tss.esp0 = (DWord) &task_union->stack[KERNEL_STACK_SIZE - 256];
+    writeMSR(0x175, &task_union->stack[KERNEL_STACK_SIZE - 256]);
+
+
+    set_cr3(task_union->task.dir_pages_baseAddr);
 }
 
 void init_sched()
 {
-	INIT_LIST_HEAD(freequeue);	
-	INIT_LIST_HEAD(readyqueue);
+	INIT_LIST_HEAD(&freequeue);
+	INIT_LIST_HEAD(&readyqueue);
 	for (int i = 0; i < NR_TASKS; ++i)
 	{
-	     list_add(task[i].task.list, freequeue);
+	     list_add(&task[i].task.list, &freequeue);
 	}
 }
 
 struct task_struct *list_head_to_task_struct(struct list_head *l)
 {
 	char * address = (char*)l;
-	address -= sizeof(list_head) + 8;
+	address -= sizeof(struct list_head) + 8;
 	return (struct task_struct *) address;
 }
 
