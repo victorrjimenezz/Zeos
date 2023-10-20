@@ -2,7 +2,9 @@
 #include <utils.h>
 #include <list.h>
 
-// Queue for blocked processes in I/O 
+// Queue for blocked processes in I/O
+struct list_head freequeue;
+struct list_head readyqueue;
 struct list_head blocked;
 
 int sys_write_console(char *buffer, int size)

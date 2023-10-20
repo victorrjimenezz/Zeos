@@ -24,6 +24,7 @@ LDFLAGS = -g -melf_i386
 
 SYSOBJ = \
 	entry.o \
+	task.o \
 	interrupt.o \
 	sys_call_table.o \
 	io.o \
@@ -69,6 +70,9 @@ sys_wrapper.s: sys_wrapper.S $(INCLUDEDIR)/asm.h $(INCLUDEDIR)/segment.h
 	$(CPP) $(ASMFLAGS) -o $@ $<
 
 sys_call_table.s: sys_call_table.S $(INCLUDEDIR)/asm.h $(INCLUDEDIR)/segment.h
+	$(CPP) $(ASMFLAGS) -o $@ $<
+
+task.s: task.S $(INCLUDEDIR)/asm.h $(INCLUDEDIR)/segment.h $(INCLUDEDIR)/task.h
 	$(CPP) $(ASMFLAGS) -o $@ $<
 
 user.o:user.c $(INCLUDEDIR)/libc.h

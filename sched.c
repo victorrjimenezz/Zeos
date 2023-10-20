@@ -6,21 +6,15 @@
 #include <mm.h>
 #include <io.h>
 #include "entry.h"
+#include <task.h>
 
 union task_union task[NR_TASKS];
-struct list_head freequeue;
-struct list_head readyqueue;
 struct task_struct * idle_task;
 
   __attribute__((__section__(".data.task")));
 
-#if 0
-struct task_struct *list_head_to_task_struct(struct list_head *l)
-{
-  return list_entry( l, struct task_struct, list);
-}
-#endif
-
+extern struct list_head freequeue;
+extern struct list_head readyqueue;
 extern struct list_head blocked;
 
 
@@ -62,14 +56,12 @@ void init_idle (void)
 {
     struct list_head *empty_process = list_pop(&freequeue);
     union task_union * task_union = (union task_union *) list_head_to_task_struct(empty_process);
-    idle_task = &task_union->task;
-    task_union->task.PID = 0;
-    allocate_DIR(&task_union->task);
-    char * stack_ptr = (char *)task_union->stack;
-    int * stack_int_ptr = (int *)(&stack_ptr[sizeof(struct task_struct)]);
-    stack_int_ptr[0] = (int) &cpu_idle;
-    stack_int_ptr[1] = 0;
-    task_union->task.stack_ptr = (int) &stack_int_ptr[2];
+    idle_task = (struct task_struct *) task_union;
+    idle_task->PID = 0;
+    allocate_DIR(idle_task);
+    idle_task->esp = (int) &task_union->stack[KERNEL_STACK_SIZE - 2];
+    task_union->stack[KERNEL_STACK_SIZE - 2] = 0;
+    task_union->stack[KERNEL_STACK_SIZE - 1] = (int) &cpu_idle;
 }
 
 void init_task1(void)
@@ -80,13 +72,8 @@ void init_task1(void)
     allocate_DIR(&task_union->task);
     set_user_pages(&task_union->task);
 
-    char * stack_ptr = (char *)task_union->stack;
-    int * stack_int_ptr = (int *)(&stack_ptr[sizeof(struct task_struct)]);
-    task_union->task.stack_ptr = (int) &stack_int_ptr[0];
-
-    tss.esp0 = (DWord) &task_union->stack[KERNEL_STACK_SIZE - 256];
-    writeMSR(0x175, &task_union->stack[KERNEL_STACK_SIZE - 256]);
-
+    tss.esp0 = (DWord) &task_union->stack[KERNEL_STACK_SIZE];
+    writeMSR(0x175, &task_union->stack[KERNEL_STACK_SIZE]);
 
     set_cr3(task_union->task.dir_pages_baseAddr);
 }
@@ -103,19 +90,31 @@ void init_sched()
 
 struct task_struct *list_head_to_task_struct(struct list_head *l)
 {
-	char * address = (char*)l;
-	address -= sizeof(struct list_head) + 8;
-	return (struct task_struct *) address;
+    return list_entry( l, struct task_struct, list);
+}
+
+void inner_task_switch(union task_union * new)
+{
+    struct task_struct * current_tu = current();
+    idle_task = current_tu;
+
+    tss.esp0 = (DWord) &new->stack[KERNEL_STACK_SIZE];
+    writeMSR(0x175, &new->stack[KERNEL_STACK_SIZE]);
+    set_cr3(new->task.dir_pages_baseAddr);
+
+    ebp_switch(&current_tu->esp, new->task.esp);
 }
 
 struct task_struct* current()
 {
-  int ret_value;
+  /*int ret_value;
   
   __asm__ __volatile__(
   	"movl %%esp, %0"
 	: "=g" (ret_value)
   );
   return (struct task_struct*)(ret_value&0xfffff000);
+   */
+  return (struct task_struct *) (((unsigned int) tss.esp0) - KERNEL_STACK_SIZE * 4);
 }
 
