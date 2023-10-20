@@ -96,7 +96,6 @@ struct task_struct *list_head_to_task_struct(struct list_head *l)
 void inner_task_switch(union task_union * new)
 {
     struct task_struct * current_tu = current();
-    idle_task = current_tu;
 
     tss.esp0 = (DWord) &new->stack[KERNEL_STACK_SIZE];
     writeMSR(0x175, &new->stack[KERNEL_STACK_SIZE]);
