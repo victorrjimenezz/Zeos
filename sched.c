@@ -8,10 +8,9 @@
 #include "entry.h"
 #include <task.h>
 
-union task_union task[NR_TASKS];
-struct task_struct * idle_task;
+union task_union task[NR_TASKS] __attribute__((__section__(".data.task")));
 
-  __attribute__((__section__(".data.task")));
+struct task_struct * idle_task;
 
 extern struct list_head freequeue;
 extern struct list_head readyqueue;
@@ -106,14 +105,12 @@ void inner_task_switch(union task_union * new)
 
 struct task_struct* current()
 {
-  /*int ret_value;
+  int ret_value;
   
   __asm__ __volatile__(
   	"movl %%esp, %0"
 	: "=g" (ret_value)
   );
   return (struct task_struct*)(ret_value&0xfffff000);
-   */
-  return (struct task_struct *) (((unsigned int) tss.esp0) - KERNEL_STACK_SIZE * 4);
 }
 
