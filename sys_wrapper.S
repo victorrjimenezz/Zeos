@@ -42,3 +42,27 @@ ENTRY(gettime)
     movl $-1, %eax
 gt_no_err:
     ret
+
+ENTRY(fork)
+    movl $2, %eax // 2 es la syscall id
+    int $0x80
+
+    cmpl $0, %eax // si eax < 0 hi ha un error
+    jge fk_no_err // else 
+
+    movl %eax, errno
+    movl $-1, %eax
+fk_no_err:
+    ret
+
+ENTRY(getpid)
+    movl $20, %eax // 20 es la syscall id
+    int $0x80
+
+    cmpl $0, %eax // si eax < 0 hi ha un error
+    jge gp_no_err // else 
+
+    movl %eax, errno
+    movl $-1, %eax
+gp_no_err:
+    ret

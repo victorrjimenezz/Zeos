@@ -6,6 +6,7 @@
 #include <io.h>
 #include <sched.h>
 #include <error_code.h>
+#include <mm.h>
 
 #define LECTURA 0
 #define ESCRIPTURA 1
@@ -66,9 +67,47 @@ int sys_getpid()
 int sys_fork()
 {
   int PID=-1;
+  extern struct list_head freequeue;
 
-  // creates the child process
+  struct list_head* head = list_pop(freequeue);  // He d'assignar el head al task struct del child?
   
+  if (!head) { 
+    return ENOMEM; // Error no hi ha prou memoria
+  }
+
+  union task_union* parent = (union task_union*)current();
+  union task_union* child = (union task_union*)list_head_to_task_struct(head);
+
+  if (!allocate_DIR(child->task)) return ENOMEM; // Busquem si hi ha prou memoria pel PCB del fill si no n'hi ha
+                                                  // Retornem error
+
+  copy_data(parent, child, sizeof(union task_union));   // Crec que si copio el union també copio el stack i el PCB
+
+
+  int pages[NUM_PAG_DATA];   // Search phisical pages to allocate the .data
+  for (int i = 0; i < NUM_PAG_DATA; ++i) {
+    pages[i] = alloc_frame();
+    if (pages[i] == -1) { // Això passarà quan no hi hagi memoria
+      for (int j = i; j >= 0; --j) free_frame(pages[j]); // Alliberem les pagines que ja haviem reservat
+      list_add_tail(head, freequeue);  // Si falla tornem a ficar el PCB a la ready_queue
+      return ENOMEM;
+    }
+  }
+
+  child->dir_pages_baseAddr = get_PT(child->task);  // Assignem el nou espai d'adreces del proces
+
+  for (unsigned int i = 0; i < NUM_PAG_KERNEL; ++i) // Fem que les entrades de la PT del fill apuntin al codi de sys del pare
+                                                    // es comença per la adreça 0(=i) que és on està el kernel
+    set_ss_pag(child->dir_pages_baseAddr, i, get_frame(parent->dir_pages_base, i));
+
+  for (unsigned int i = 0; i < NUM_PAG_CODE; ++i) // El mateix que abans però amb el codi
+    set_ss_pag(child->dir_pages_baseAddr, i + PAG_LOG_INIT_CODE, get_frame(parent->dir_pages_base, i + PAG_LOG_INIT_CODE));
+
+  for (unsigned int i = 0; i < NUM_PAG_DATA; ++i) // idem pel .data
+    set_ss_pag(child->dir_pages_baseAddr, i + PAG_LOG_INIT_DATA, get_frame(parent->dir_pages_base, i + PAG_LOG_INIT_DATA));
+
+  
+
   return PID;
 }
 

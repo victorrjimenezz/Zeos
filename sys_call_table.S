@@ -4,7 +4,7 @@
 ENTRY (sys_call_table)
 	.long sys_ni_syscall//0
 	.long sys_ni_syscall//1
-	.long sys_ni_syscall//2
+	.long sys_fork//2
 	.long sys_ni_syscall//3
 	.long sys_write // 4
 	.long sys_ni_syscall//5
@@ -13,5 +13,15 @@ ENTRY (sys_call_table)
 	.long sys_ni_syscall//8
 	.long sys_ni_syscall//9
 	.long sys_gettime//10
+	.long sys_gettime//11
+	.long sys_gettime//12
+	.long sys_gettime//13
+	.long sys_gettime//14
+	.long sys_gettime//15
+	.long sys_gettime//16
+	.long sys_gettime//17
+	.long sys_gettime//18
+	.long sys_gettime//19
+	.long sys_getpid//20
 .global MAX_SYSCALL
 MAX_SYSCALL = (. - sys_call_table)/4
