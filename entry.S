@@ -137,3 +137,9 @@ ENTRY(writeMSR)
       wrmsr
       popl %ebp
       ret
+
+ENTRY(fix_stack)
+      popl %ebp
+      pushl $0
+      pushl ret_from_fork
+      ret

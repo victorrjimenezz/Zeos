@@ -11,5 +11,6 @@ void segmentation_fault_handler();
 void sys_call_handler();
 void sysenter_handler();
 void writeMSR(int index, void *value);
+void fix_stack();
 
 #endif  /* __ENTRY_H__ */
