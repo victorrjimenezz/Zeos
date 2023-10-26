@@ -150,4 +150,6 @@ void clock_routine()
 {
   zeos_show_clock();
   zeos_ticks++;
+  update_sched_data_rr();
+  schedule();
 }

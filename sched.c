@@ -55,18 +55,21 @@ void init_idle (void)
 {
     struct list_head *empty_process = list_pop(&freequeue);
     union task_union * task_union = (union task_union *) list_head_to_task_struct(empty_process);
+    set_quantum(&task_union->task, 1);
     idle_task = (struct task_struct *) task_union;
     idle_task->PID = 0;
     allocate_DIR(idle_task);
     idle_task->esp = (int) &task_union->stack[KERNEL_STACK_SIZE - 2];
     task_union->stack[KERNEL_STACK_SIZE - 2] = 0;
     task_union->stack[KERNEL_STACK_SIZE - 1] = (int) &cpu_idle;
+    list_add(&task_union->task.list, &readyqueue);
 }
 
 void init_task1(void)
 {
     struct list_head *empty_process = list_pop(&freequeue);
     union task_union * task_union = (union task_union *) list_head_to_task_struct(empty_process);
+    set_quantum(&task_union->task, 100);
     task_union->task.PID = 1;
     allocate_DIR(&task_union->task);
     set_user_pages(&task_union->task);
@@ -101,6 +104,52 @@ void inner_task_switch(union task_union * new)
     set_cr3(new->task.dir_pages_baseAddr);
 
     ebp_switch(&current_tu->esp, new->task.esp);
+}
+
+unsigned int current_quantum = 100;
+
+void sched_next_rr()
+{
+    union task_union * task_union = (union task_union *) list_head_to_task_struct(list_pop(&readyqueue));
+    current_quantum = get_quantum(&task_union->task);
+    task_switch(task_union);
+}
+
+void update_process_state_rr(struct task_struct *t, struct list_head *dest)
+{
+    if (t->list.next != NULL)
+        list_del(&t->list);
+
+    list_add_tail(&t->list, dest);
+}
+
+int needs_sched_rr()
+{
+    return !current_quantum;
+}
+
+void update_sched_data_rr()
+{
+    --current_quantum;
+}
+
+void schedule()
+{
+    if (needs_sched_rr())
+    {
+        update_process_state_rr(current(), &readyqueue);
+        sched_next_rr();
+    }
+}
+
+unsigned int get_quantum(struct task_struct *t)
+{
+    return t->quantum;
+}
+
+void set_quantum(struct task_struct *t, int new_quantum)
+{
+    t->quantum = new_quantum;
 }
 
 struct task_struct* current()
