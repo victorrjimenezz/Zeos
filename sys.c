@@ -6,6 +6,7 @@
 #include <io.h>
 #include <sched.h>
 #include <error_code.h>
+#include "mm.h"
 
 #define LECTURA 0
 #define ESCRIPTURA 1
@@ -73,7 +74,45 @@ int sys_fork()
 }
 
 void sys_exit()
-{  
+{
+    extern unsigned int switching_enabled;
+    switching_enabled = 0;
+
+    struct task_struct * current_process = current();
+
+    extern struct list_head freequeue;
+    update_process_state_rr(current_process, &freequeue);
+    current_process->PID = 0;
+    current_process->quantum = 0;
+
+    page_table_entry * page_tage = get_PT(current_process);
+
+    /* CODE */
+    for (int pag = 0; pag < NUM_PAG_CODE; pag++)
+    {
+        free_frame(page_tage[PAG_LOG_INIT_DATA+pag].bits.pbase_addr);
+        page_tage[PAG_LOG_INIT_CODE+pag].entry = 0;
+        page_tage[PAG_LOG_INIT_CODE+pag].bits.user = 0;
+        page_tage[PAG_LOG_INIT_CODE+pag].bits.present = 0;
+    }
+
+    /* DATA */
+    for (int pag = 0; pag < NUM_PAG_CODE; pag++)
+    {
+        free_frame(page_tage[PAG_LOG_INIT_DATA+pag].bits.pbase_addr);
+        page_tage[PAG_LOG_INIT_DATA+pag].entry = 0;
+        page_tage[PAG_LOG_INIT_DATA+pag].bits.user = 0;
+        page_tage[PAG_LOG_INIT_DATA+pag].bits.rw = 0;
+        page_tage[PAG_LOG_INIT_DATA+pag].bits.present = 0;
+    }
+
+
+    extern struct list_head readyqueue;
+    union task_union * next_task = (union task_union *) list_head_to_task_struct(list_pop(&readyqueue));
+    extern unsigned int current_quantum;
+    current_quantum = get_quantum(&next_task->task);
+    switching_enabled = 1;
+    task_switch(next_task);
 }
 
 unsigned int sys_gettime()

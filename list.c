@@ -1,4 +1,5 @@
 #include <list.h>
+#include "types.h"
 
 /* 
  * Initializes an empty list.
@@ -86,9 +87,10 @@ void list_del(struct list_head *entry)
 struct list_head *list_pop(struct list_head *list)
 {
 	struct list_head * dequeued_element = list->next;
-	list_del(dequeued_element);
+    if (!list_empty(list))
+        list_del(dequeued_element);
 	
-	return dequeued_element;
+    return dequeued_element;
 }
 
 /**

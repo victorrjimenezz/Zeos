@@ -31,6 +31,22 @@ w_no_err:
     popl %ebp
     ret
 
+ENTRY(exit)
+    pushl %ebp
+    movl %esp, %ebp
+
+
+    pushl $r_write // Adreça de retorn
+    pushl %ebp // salvem el ebp d'aquesta funció
+    movl %esp, %ebp // fiquem a ebp el esp per despres tornar
+    movl $1, %eax
+    sysenter
+
+    popl %ebp
+    movl %ebp, %esp
+    popl %ebp
+    ret
+
 ENTRY(gettime)
     movl $10, %eax
     int $0x80

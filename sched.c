@@ -15,6 +15,7 @@ struct task_struct * idle_task;
 extern struct list_head freequeue;
 extern struct list_head readyqueue;
 extern struct list_head blocked;
+unsigned int switching_enabled = 0;
 
 
 /* get_DIR - Returns the Page Directory address for task 't' */
@@ -78,6 +79,7 @@ void init_task1(void)
     writeMSR(0x175, &task_union->stack[KERNEL_STACK_SIZE]);
 
     set_cr3(task_union->task.dir_pages_baseAddr);
+    switching_enabled = 1;
 }
 
 void init_sched()
@@ -117,7 +119,7 @@ void sched_next_rr()
 
 void update_process_state_rr(struct task_struct *t, struct list_head *dest)
 {
-    if (t->list.next != NULL)
+    if (list_empty(&t->list))
         list_del(&t->list);
 
     list_add_tail(&t->list, dest);
@@ -135,10 +137,15 @@ void update_sched_data_rr()
 
 void schedule()
 {
-    if (needs_sched_rr())
+    if (needs_sched_rr() && switching_enabled)
     {
-        update_process_state_rr(current(), &readyqueue);
-        sched_next_rr();
+        if (!list_empty(&readyqueue))
+        {
+            update_process_state_rr(current(), &readyqueue);
+            sched_next_rr();
+        }
+        else
+            current_quantum = current()->quantum;
     }
 }
 
