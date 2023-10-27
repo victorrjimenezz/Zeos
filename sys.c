@@ -14,6 +14,11 @@
 
 unsigned int zeos_ticks = 0;
 
+int ret_from_fork() 
+{
+  return 0;
+}
+
 int check_fd(int fd, int permissions)
 {
   if (fd != ESCRIPTURA && fd != ERROR) return EBADF;
@@ -68,6 +73,7 @@ int sys_fork()
 {
   int PID=-1;
   extern struct list_head freequeue;
+  extern struct list_head readyqueue;
 
   struct list_head* head = list_pop(&freequeue);  // He d'assignar el head al task struct del child?
   
@@ -106,20 +112,29 @@ int sys_fork()
     set_ss_pag(child->task.dir_pages_baseAddr, i + PAG_LOG_INIT_CODE, get_frame(parent->task.dir_pages_baseAddr, i + PAG_LOG_INIT_CODE));
 
   for (unsigned int i = 0; i < NUM_PAG_DATA; ++i) // Enlloc de assignar les pagines del pare assignem les noves que hem reservat
-    set_ss_pag(parent->task.dir_pages_baseAddr, i + PAG_LOG_INIT_CODE + NUM_PAG_CODE, pages[i]);
+    set_ss_pag(parent->task.dir_pages_baseAddr, 0x200 + i, pages[i]); // Adreça hardcoded per veure si funciona (no va)
+    //set_ss_pag(parent->task.dir_pages_baseAddr, i + PAG_LOG_INIT_CODE + NUM_PAG_CODE, pages[i]); // Assignem les pagines fisiques de dades del fill al par
 
-  copy_data((int*)L_USER_START, (int*)((NUM_PAG_CODE + NUM_PAG_DATA)*4096 + L_USER_START), NUM_PAG_DATA*4096);
+  //copy_data((int*)L_USER_START, (int*)L_USER_START, NUM_PAG_DATA*4096); // Copiant ho al mateix lloc si que va
+  copy_data((int*)L_USER_START, 0x200000, NUM_PAG_DATA*4096); // Adreça hardcoded per veure si funciona (no va)
+  //copy_data((int*)L_USER_START, (int*)((NUM_PAG_CODE + NUM_PAG_DATA)*4096 + L_USER_START), NUM_PAG_DATA*4096); // Codi que creiem que esta be
 
-  for (unsigned int i = 0; i < NUM_PAG_DATA; ++i) // Enlloc de assignar les pagines del pare assignem les noves que hem reservat
-    del_ss_pag(parent->task.dir_pages_baseAddr, i + PAG_LOG_INIT_CODE + NUM_PAG_CODE);
+  for (unsigned int i = 0; i < NUM_PAG_DATA; ++i) // Eliminem les entrades que hem afegit a la TP del pare
+    //del_ss_pag(parent->task.dir_pages_baseAddr, i + PAG_LOG_INIT_CODE + NUM_PAG_CODE);
+    del_ss_pag(parent->task.dir_pages_baseAddr, 0x200 + i);
 
   set_cr3(parent->task.dir_pages_baseAddr);
 
   child->task.PID = sys_getpid() + 1;  // Faig aixo pq lo altre em dona problemes de tipus
 
-  child->task.esp = child->stack + (14 + 3 + 5)*4;  // 14 del saveall, 3 dels returns que forcem i 5 del ctx hw
+  child->task.esp = (int)(child->stack + (14 + 3 + 5)*4);  // 14 del saveAll, 3 dels returns que forcem i 5 del ctx hw
 
-  fix_stack();
+  unsigned int* esp = (unsigned int*)child->task.esp; // Ho de fer així pq amb un casting no em deixa
+
+  esp[0] = 0;
+  esp[-4] = (unsigned int)ret_from_fork;
+
+  list_add_tail(head, &readyqueue);
  
   return PID;
 }
@@ -131,9 +146,4 @@ void sys_exit()
 unsigned int sys_gettime()
 {
   return zeos_ticks;
-}
-
-int ret_from_fork() 
-{
-  return 0;
 }

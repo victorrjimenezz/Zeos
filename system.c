@@ -82,8 +82,8 @@ int __attribute__((__section__(".text.main")))
   setGdt(); /* Definicio de la taula de segments de memoria */
   setIdt(); /* Definicio del vector de interrupcions */
   setTSS(); /* Definicio de la TSS */
-  writeMSR(0x174, __KERNEL_CS);
-  writeMSR(0x175, INITIAL_ESP);
+  writeMSR(0x174, (void *)__KERNEL_CS);
+  writeMSR(0x175, (void *)INITIAL_ESP);
   writeMSR(0x176, sysenter_handler);
 
   /* Initialize Memory */
