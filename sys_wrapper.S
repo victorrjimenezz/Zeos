@@ -48,6 +48,29 @@ r_exit:
     popl %ebp
     ret
 
+ENTRY(fork)
+        pushl %ebp
+        movl %esp, %ebp
+
+        pushl $r_fork // Adreça de retorn
+        pushl %ebp // salvem el ebp d'aquesta funció
+        movl %esp, %ebp // fiquem a ebp el esp per despres tornar
+        movl $2, %eax
+        sysenter
+r_fork:
+        cmpl $0, %eax // si eax < 0 hi ha un error
+        jge fork_no_err // else
+
+        movl %eax, errno
+        movl $-1, %eax
+
+fork_no_err:
+        popl %ebp
+        movl %ebp, %esp
+        popl %ebp
+        ret
+
+
 ENTRY(gettime)
     movl $10, %eax
     int $0x80

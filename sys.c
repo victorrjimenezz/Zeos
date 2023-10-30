@@ -13,6 +13,8 @@
 #define ERROR 2
 
 unsigned int zeos_ticks = 0;
+extern struct list_head freequeue;
+extern struct list_head readyqueue;
 
 int check_fd(int fd, int permissions)
 {
@@ -64,13 +66,76 @@ int sys_getpid()
 	return current()->PID;
 }
 
+int ret_from_fork()
+{
+    return 0;
+}
+
 int sys_fork()
 {
-  int PID=-1;
+  extern unsigned int switching_enabled;
+  switching_enabled = 0;
 
-  // creates the child process
-  
-  return PID;
+  if (list_empty(&freequeue))
+  {
+      switching_enabled = 1;
+      return EBNRTASK;
+  }
+
+  struct task_struct * parent_task = current();
+
+  struct list_head *empty_process = list_pop(&freequeue);
+  union task_union * child_union = (union task_union *) list_head_to_task_struct(empty_process);
+  child_union->task = *parent_task;
+  child_union->task.PID = (zeos_ticks ^ 0xDEADBEEF) & 0x7FFFFFFF;
+  allocate_DIR(&child_union->task);
+  page_table_entry * process_child_PT = get_PT(&child_union->task);
+  page_table_entry * process_parent_PT = get_PT(parent_task);
+
+  {
+    int pag;
+    int new_ph_pag;
+
+    for (pag=0;pag<NUM_PAG_CODE;pag++)
+    {
+        process_child_PT[PAG_LOG_INIT_CODE+pag].entry = process_parent_PT[PAG_LOG_INIT_CODE+pag].entry;
+        process_child_PT[PAG_LOG_INIT_CODE+pag].bits.pbase_addr = process_parent_PT[PAG_LOG_INIT_CODE+pag].bits.pbase_addr;
+        process_child_PT[PAG_LOG_INIT_CODE+pag].bits.user = process_parent_PT[PAG_LOG_INIT_CODE+pag].bits.user;
+        process_child_PT[PAG_LOG_INIT_CODE+pag].bits.present = process_parent_PT[PAG_LOG_INIT_CODE+pag].bits.present;
+    }
+
+    for (pag=0;pag<NUM_PAG_DATA;pag++)
+    {
+        new_ph_pag=alloc_frame();
+        process_child_PT[PAG_LOG_INIT_DATA+pag].entry = 0;
+        process_child_PT[PAG_LOG_INIT_DATA+pag].bits.pbase_addr = new_ph_pag;
+        process_child_PT[PAG_LOG_INIT_DATA+pag].bits.user = 1;
+        process_child_PT[PAG_LOG_INIT_DATA+pag].bits.rw = 1;
+        process_child_PT[PAG_LOG_INIT_DATA+pag].bits.present = 1;
+
+        set_ss_pag(process_parent_PT, PAG_LOG_INIT_CODE + NUM_PAG_CODE + pag, new_ph_pag);
+    }
+  }
+
+  copy_data((void *) (PAG_LOG_INIT_DATA * PAGE_SIZE), (void *) ((PAG_LOG_INIT_CODE + NUM_PAG_CODE) * PAGE_SIZE), PAGE_SIZE * NUM_PAG_DATA);
+
+  for (int pag=0;pag<NUM_PAG_DATA;pag++)
+       del_ss_pag(process_parent_PT, PAG_LOG_INIT_CODE + NUM_PAG_CODE + pag);
+
+  set_cr3(parent_task->dir_pages_baseAddr);
+
+  child_union->task.esp = (int) &child_union->stack[KERNEL_STACK_SIZE - 0x13];
+
+  child_union->stack[KERNEL_STACK_SIZE - 0x13] = 0;
+  child_union->stack[KERNEL_STACK_SIZE - 0x12] = (int) &ret_from_fork;
+
+  for (int i = 0; i < 0x11; i++)
+      child_union->stack[KERNEL_STACK_SIZE - 1 - i] = ((union task_union *) parent_task)->stack[KERNEL_STACK_SIZE - 1 - i];
+
+
+  list_add(&child_union->task.list, &readyqueue);
+  switching_enabled = 1;
+  return child_union->task.PID;
 }
 
 void sys_exit()
