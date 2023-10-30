@@ -36,12 +36,13 @@ ENTRY(exit)
     movl %esp, %ebp
 
 
-    pushl $r_write // Adreça de retorn
+    pushl $r_exit // Adreça de retorn
     pushl %ebp // salvem el ebp d'aquesta funció
     movl %esp, %ebp // fiquem a ebp el esp per despres tornar
     movl $1, %eax
     sysenter
 
+r_exit:
     popl %ebp
     movl %ebp, %esp
     popl %ebp
