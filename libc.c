@@ -62,6 +62,13 @@ void perror()
             break;
         }
 
+        case EBNRTASK:
+        {
+            char missatge[] = "No more free tasks\n";
+            write(2, missatge, strlen(missatge));
+            break;
+        }
+
         case EBADF:
         {
             char missatge[] = "File descriptor erroni\n";
