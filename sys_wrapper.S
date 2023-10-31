@@ -66,3 +66,32 @@ ENTRY(getpid)
     movl $-1, %eax
 gp_no_err:
     ret
+
+ENTRY(get_stats)
+    pushl %ebp
+    movl %esp, %ebp
+
+    pushl %ebx
+
+    movl 8(%ebp), %edx // Pas de paramatres
+    movl 12(%ebp), %ecx
+
+    pushl $r_get_stats // Adreça de retorn 
+    pushl %ebp // salvem el ebp d'aquesta funció 
+    movl %esp, %ebp // fiquem a ebp el esp per despres tornar
+    movl $35, %eax
+    sysenter
+r_get_stats:
+    cmpl $0, %eax // si eax < 0 hi ha un error
+    jge gs_no_err // else 
+
+    movl %eax, errno
+    movl $-1, %eax
+
+gs_no_err:
+    popl %ebp
+    addl $4, %esp
+    popl %ebx
+    movl %ebp, %esp
+    popl %ebp
+    ret

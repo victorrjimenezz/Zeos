@@ -14,11 +14,23 @@
 
 enum state_t { ST_RUN, ST_READY, ST_BLOCKED };
 
+struct stats {
+  unsigned long user_ticks; /* Total ticks executing user code */
+  unsigned long system_ticks; /* Total ticks executing system code */
+  unsigned long blocked_ticks; /* Total ticks in the blocked state */
+  unsigned long ready_ticks; /* Total ticks in the ready state */
+  unsigned long elapsed_total_ticks; /* Ticks since the power on of the machine until the beginning of the current state */
+  unsigned long total_trans;/* Total transitions ready --> run */
+  unsigned long remaining_ticks; /* Remaining ticks to end the quantum */
+};
+
 struct task_struct {
   int PID;			/* Process ID. This MUST be the first field of the struct. */
   page_table_entry * dir_pages_baseAddr;
   struct list_head list;
   int esp;
+  struct stats st;
+  state_t state;
 };
 
 union task_union {
@@ -27,7 +39,6 @@ union task_union {
 };
 
 extern union task_union task[NR_TASKS]; /* Vector de tasques */
-
 
 #define KERNEL_ESP(t)       	(DWord) &(t)->stack[KERNEL_STACK_SIZE]
 
