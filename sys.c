@@ -73,12 +73,9 @@ int ret_from_fork()
 
 int sys_fork()
 {
-  extern unsigned int switching_enabled;
-  switching_enabled = 0;
 
   if (list_empty(&freequeue))
   {
-      switching_enabled = 1;
       return EBNRTASK;
   }
 
@@ -134,15 +131,11 @@ int sys_fork()
 
 
   list_add(&child_union->task.list, &readyqueue);
-  switching_enabled = 1;
   return child_union->task.PID;
 }
 
 void sys_exit()
 {
-    extern unsigned int switching_enabled;
-    switching_enabled = 0;
-
     struct task_struct * current_process = current();
 
     extern struct list_head freequeue;
@@ -176,7 +169,6 @@ void sys_exit()
     union task_union * next_task = (union task_union *) list_head_to_task_struct(list_pop(&readyqueue));
     extern unsigned int current_quantum;
     current_quantum = get_quantum(&next_task->task);
-    switching_enabled = 1;
     task_switch(next_task);
 }
 
