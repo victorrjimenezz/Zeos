@@ -117,7 +117,7 @@ void sched_next_rr()
 
 void update_process_state_rr(struct task_struct *t, struct list_head *dest)
 {
-    if (list_empty(&t->list))
+    if (in_list(&t->list))
         list_del(&t->list);
 
     list_add_tail(&t->list, dest);

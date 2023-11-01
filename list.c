@@ -78,6 +78,14 @@ void list_del(struct list_head *entry)
 	entry->next = (void*) 0;
 	entry->prev = (void*) 0;
 }
+/**
+ *
+ * returns 1 iff the element is in any list.
+ */
+int in_list(struct list_head *entry)
+{
+	return ((entry->next != (void*) 0) && (entry->prev != (void*) 0)) ? 1 : 0;
+}
 
 /**
  * list_pop - pops queue's first element.
