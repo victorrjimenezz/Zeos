@@ -103,7 +103,7 @@ void inner_task_switch(union task_union * new)
     writeMSR(0x175, &new->stack[KERNEL_STACK_SIZE]);
     set_cr3(new->task.dir_pages_baseAddr);
 
-    ebp_switch(&current_tu->esp, new->task.esp);
+    ebp_switch(&current_tu->esp, &new->task.esp);
 }
 
 unsigned int current_quantum = 100;

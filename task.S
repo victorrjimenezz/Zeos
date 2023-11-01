@@ -23,7 +23,8 @@ ENTRY(ebp_switch)
       movl %esp, %ebp
       movl 8(%ebp), %eax
       movl %ebp, (%eax)
-      movl 12(%ebp), %ebp
+      movl 12(%ebp), %eax
+      movl (%eax), %ebp
       movl %ebp, %esp
       popl %ebp
       ret
