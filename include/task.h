@@ -4,6 +4,6 @@
 
 #include <sched.h>
 void task_switch(union task_union *new);
-void ebp_switch(int *old_esp, int new_esp);
+void ebp_switch(int *old_esp, int *new_esp);
 
 #endif
