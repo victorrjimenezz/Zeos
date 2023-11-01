@@ -111,6 +111,13 @@ unsigned int current_quantum = 100;
 void sched_next_rr()
 {
     union task_union * task_union = (union task_union *) list_head_to_task_struct(list_pop(&readyqueue));
+
+    if (task_union->task.PID == 0 && !list_empty(&readyqueue))
+    {
+        list_add_tail(&task_union->task.list, &readyqueue);
+        task_union = (union task_union *) list_head_to_task_struct(list_pop(&readyqueue));
+    }
+
     current_quantum = get_quantum(&task_union->task);
     task_switch(task_union);
 }
