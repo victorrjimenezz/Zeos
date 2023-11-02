@@ -84,6 +84,11 @@ void list_add_tail(struct list_head *new, struct list_head *head);
 void list_del(struct list_head *entry);
 
 /**
+ * Indicates whether a given list_head belongs to a list.
+ */
+int in_list(struct list_head *entry);
+
+/**
  * list_pop - pops queue's first element.
  * @list: the list from which to pop.
  * @ret: 0 if queue is empty, * to the popped element if not.
