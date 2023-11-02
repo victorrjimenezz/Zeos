@@ -138,8 +138,6 @@ void sys_exit()
 {
     struct task_struct * current_process = current();
 
-    extern struct list_head freequeue;
-    update_process_state_rr(current_process, &freequeue);
     current_process->PID = 0;
     current_process->quantum = 0;
 
@@ -163,13 +161,11 @@ void sys_exit()
         page_tage[PAG_LOG_INIT_DATA+pag].bits.rw = 0;
         page_tage[PAG_LOG_INIT_DATA+pag].bits.present = 0;
     }
+    
+    extern struct list_head freequeue;
+    update_process_state_rr(current_process, &freequeue);
 
-
-    extern struct list_head readyqueue;
-    union task_union * next_task = (union task_union *) list_head_to_task_struct(list_pop(&readyqueue));
-    extern unsigned int current_quantum;
-    current_quantum = get_quantum(&next_task->task);
-    task_switch(next_task);
+    sched_next_rr();
 }
 
 unsigned int sys_gettime()
