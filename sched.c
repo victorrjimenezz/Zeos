@@ -6,6 +6,7 @@
 #include <mm.h>
 #include <io.h>
 #include "entry.h"
+#include "utils.h"
 #include <task.h>
 
 union task_union task[NR_TASKS] __attribute__((__section__(".data.task")));
