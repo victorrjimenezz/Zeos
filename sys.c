@@ -218,15 +218,19 @@ int sys_get_stats(int pid, struct stats* st)
   
   if (!found) { printk("not found\n"); return -1; }
 
-  struct task_struct* current = (struct task_struct*)target;
+  struct task_struct* current_ts = (struct task_struct*)target;
+  struct stats st_temp;
 
-  st->user_ticks = current->stadistics.user_ticks;
-  st->system_ticks = current->stadistics.system_ticks;
-  st->blocked_ticks = current->stadistics.blocked_ticks;
-  st->ready_ticks = current->stadistics.ready_ticks;
-  st->elapsed_total_ticks = current->stadistics.elapsed_total_ticks;
-  st->total_trans = current->stadistics.total_trans;
-  st->remaining_ticks = current->stadistics.remaining_ticks;
+  st_temp.user_ticks = current_ts->stadistics.user_ticks;
+  st_temp.system_ticks = current_ts->stadistics.system_ticks;
+  st_temp.blocked_ticks = current_ts->stadistics.blocked_ticks;
+  st_temp.ready_ticks = current_ts->stadistics.ready_ticks;
+  st_temp.elapsed_total_ticks = current_ts->stadistics.elapsed_total_ticks;
+  st_temp.total_trans = current_ts->stadistics.total_trans;
+  st_temp.remaining_ticks = current_ts->stadistics.remaining_ticks;
+
+  if (!copy_to_user(&st_temp, st, sizeof(struct stats)))
+      return -1;
 
   update_stats(0);
   return 0;
