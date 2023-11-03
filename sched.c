@@ -138,6 +138,7 @@ void sched_next_rr()
 
     current_quantum = get_quantum(&task_union->task);
     task_union->task.stadistics.ready_ticks += get_ticks()-task_union->task.stadistics.elapsed_total_ticks;
+    task_union->task.stadistics.remaining_ticks = current_quantum;
     task_union->task.stadistics.elapsed_total_ticks = get_ticks();
     ++task_union->task.stadistics.total_trans;
     task_switch(task_union);
@@ -160,7 +161,6 @@ void update_sched_data_rr()
 {
     --current_quantum;
     --current()->stadistics.remaining_ticks;
-    ++current()->stadistics.elapsed_total_ticks;
 }
 
 void schedule()
@@ -188,7 +188,6 @@ unsigned int get_quantum(struct task_struct *t)
 void set_quantum(struct task_struct *t, int new_quantum)
 {
     t->quantum = new_quantum;
-    t->stadistics.remaining_ticks = new_quantum;
 }
 
 struct task_struct* current()
