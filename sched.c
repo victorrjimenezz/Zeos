@@ -96,8 +96,6 @@ void init_task1(void)
     task_union->task.stadistics.elapsed_total_ticks = get_ticks();
     task_union->task.stadistics.total_trans = 0;
     task_union->task.stadistics.remaining_ticks = 0;
-    
-
 }
 
 void init_sched()
