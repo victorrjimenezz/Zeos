@@ -207,13 +207,17 @@ int sys_get_stats(int pid, struct stats* st)
   if (!st) return -1; // Es pot canviar per un error que indiqui que el punter es invalid  
   extern union task_union task[NR_TASKS]; /* Vector de tasques */
   
-  int found = 0, i = 0;
+  int found = 0;
   union task_union* target;
 
-  while (!found) 
+  for (int i = 0; i < NR_TASKS; ++i)
   {
     target = &task[i++];
-    if (target->task.PID == pid) found = 1;
+    if (target->task.PID == pid)
+    {
+        found = 1;
+        break;
+    }
   }
   
   if (!found) { printk("not found\n"); return -1; }
