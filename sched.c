@@ -62,6 +62,15 @@ void init_idle (void)
     idle_task->esp = (int) &task_union->stack[KERNEL_STACK_SIZE - 2];
     task_union->stack[KERNEL_STACK_SIZE - 2] = 0;
     task_union->stack[KERNEL_STACK_SIZE - 1] = (int) &cpu_idle;
+
+    task_union->task.stadistics.user_ticks = 0;
+    task_union->task.stadistics.system_ticks = 0;
+    task_union->task.stadistics.blocked_ticks = 0;
+    task_union->task.stadistics.ready_ticks = 0;
+    task_union->task.stadistics.elapsed_total_ticks = get_ticks();
+    task_union->task.stadistics.total_trans = 0;
+    task_union->task.stadistics.remaining_ticks = 0;
+    
     list_add(&task_union->task.list, &readyqueue);
 }
 
@@ -78,6 +87,16 @@ void init_task1(void)
     writeMSR(0x175, &task_union->stack[KERNEL_STACK_SIZE]);
 
     set_cr3(task_union->task.dir_pages_baseAddr);
+
+    task_union->task.stadistics.user_ticks = 0;
+    task_union->task.stadistics.system_ticks = 0;
+    task_union->task.stadistics.blocked_ticks = 0;
+    task_union->task.stadistics.ready_ticks = 0;
+    task_union->task.stadistics.elapsed_total_ticks = get_ticks();
+    task_union->task.stadistics.total_trans = 0;
+    task_union->task.stadistics.remaining_ticks = 0;
+    
+
 }
 
 void init_sched()
@@ -119,6 +138,8 @@ void sched_next_rr()
     }
 
     current_quantum = get_quantum(&task_union->task);
+    task_union->task.stadistics.ready_ticks += get_ticks()-task_union->task.stadistics.elapsed_total_ticks;
+    task_union->task.stadistics.elapsed_total_ticks = get_ticks();
     task_switch(task_union);
 }
 
@@ -138,6 +159,8 @@ int needs_sched_rr()
 void update_sched_data_rr()
 {
     --current_quantum;
+    --current()->stadistics.remaining_ticks;
+    ++current()->stadistics.elapsed_total_ticks;
 }
 
 void schedule()
@@ -145,7 +168,10 @@ void schedule()
     if (needs_sched_rr())
     {
         if (!list_empty(&readyqueue))
-        {
+        {   
+            struct task_struct* actual = current();
+            actual->stadistics.system_ticks += get_ticks()-current()->stadistics.elapsed_total_ticks; 
+            actual->stadistics.elapsed_total_ticks = get_ticks(); // Aquí el procés passa de systema a ready
             update_process_state_rr(current(), &readyqueue);
             sched_next_rr();
         }
@@ -162,6 +188,7 @@ unsigned int get_quantum(struct task_struct *t)
 void set_quantum(struct task_struct *t, int new_quantum)
 {
     t->quantum = new_quantum;
+    t->stadistics.remaining_ticks = new_quantum;
 }
 
 struct task_struct* current()
