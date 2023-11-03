@@ -16,6 +16,20 @@ unsigned int zeos_ticks = 0;
 extern struct list_head freequeue;
 extern struct list_head readyqueue;
 
+void update_stats(int entering) // El pramatre actua com a boolea i inidica si estem entrant o sortint de sys
+{
+    if (entering)
+    {
+        current()->stadistics.user_ticks += get_ticks()-current()->stadistics.elapsed_total_ticks;
+        current()->stadistics.elapsed_total_ticks = get_ticks(); 
+    }
+    else
+    {
+        current()->stadistics.system_ticks += get_ticks()-current()->stadistics.elapsed_total_ticks;
+        current()->stadistics.elapsed_total_ticks = get_ticks(); 
+    }
+}
+
 int check_fd(int fd, int permissions)
 {
   if (fd != ESCRIPTURA && fd != ERROR) return EBADF;
@@ -31,6 +45,7 @@ int sys_ni_syscall()
 
 int sys_write(int fd, char * buffer, int size)
 {
+    update_stats(1);
     int ret = check_fd(fd, ESCRIPTURA);
 
     if (ret < 0)
@@ -58,6 +73,7 @@ int sys_write(int fd, char * buffer, int size)
         size -= 1024;
     }
     
+    update_stats(0);
     return total_bytes;
 }
 
@@ -73,6 +89,7 @@ int ret_from_fork()
 
 int sys_fork()
 {
+  update_stats(1);
   extern unsigned int switching_enabled;
   switching_enabled = 0;
 
@@ -134,12 +151,23 @@ int sys_fork()
 
 
   list_add(&child_union->task.list, &readyqueue);
+
+  child_union->task.stadistics.user_ticks = 0;
+  child_union->task.stadistics.system_ticks = 0;
+  child_union->task.stadistics.blocked_ticks = 0;
+  child_union->task.stadistics.ready_ticks = 0;
+  child_union->task.stadistics.elapsed_total_ticks = get_ticks();
+  child_union->task.stadistics.total_trans = 0;
+  child_union->task.stadistics.remaining_ticks = 0;
+
+  update_stats(0);
   switching_enabled = 1;
   return child_union->task.PID;
 }
 
 void sys_exit()
 {
+    update_stats(1);
     extern unsigned int switching_enabled;
     switching_enabled = 0;
 
@@ -171,11 +199,11 @@ void sys_exit()
         page_tage[PAG_LOG_INIT_DATA+pag].bits.present = 0;
     }
 
-
     extern struct list_head readyqueue;
     union task_union * next_task = (union task_union *) list_head_to_task_struct(list_pop(&readyqueue));
     extern unsigned int current_quantum;
     current_quantum = get_quantum(&next_task->task);
+    update_stats(0);
     switching_enabled = 1;
     task_switch(next_task);
 }
@@ -183,4 +211,35 @@ void sys_exit()
 unsigned int sys_gettime()
 {
   return zeos_ticks;
+}
+
+int sys_get_stats(int pid, struct stats* st)
+{
+  update_stats(1);
+  if (!st) return -1; // Es pot canviar per un error que indiqui que el punter es invalid  
+  extern union task_union task[NR_TASKS]; /* Vector de tasques */
+  
+  int found = 0, i = 0;
+  union task_union* target;
+
+  while (!found) 
+  {
+    target = &task[i++];
+    if (target->task.PID == pid) found = 1;
+  }
+  
+  if (!found) { printk("not found\n"); return -1; }
+
+  struct task_struct* current = (struct task_struct*)target;
+
+  st->user_ticks = current->stadistics.user_ticks;
+  st->system_ticks = current->stadistics.system_ticks;
+  st->blocked_ticks = current->stadistics.blocked_ticks;
+  st->ready_ticks = current->stadistics.ready_ticks;
+  st->elapsed_total_ticks = current->stadistics.elapsed_total_ticks;
+  st->total_trans = current->stadistics.total_trans;
+  st->remaining_ticks = current->stadistics.remaining_ticks;
+
+  update_stats(0);
+  return 0;
 }
