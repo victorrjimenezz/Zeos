@@ -140,6 +140,7 @@ void sched_next_rr()
     current_quantum = get_quantum(&task_union->task);
     task_union->task.stadistics.ready_ticks += get_ticks()-task_union->task.stadistics.elapsed_total_ticks;
     task_union->task.stadistics.elapsed_total_ticks = get_ticks();
+    ++task_union->task.stadistics.total_trans;
     task_switch(task_union);
 }
 
