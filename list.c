@@ -87,11 +87,6 @@ int in_list(struct list_head *entry)
 	return ((entry->next != (void*) 0) && (entry->prev != (void*) 0)) ? 1 : 0;
 }
 
-int in_list(struct list_head* entry) 
-{
-	return ((entry->next != (void *) 0) && (entry->prev != (void *) 0)) ? 1 : 0;
-}
-
 /**
  * list_pop - pops queue's first element.
  * @list: the list from which to pop.
