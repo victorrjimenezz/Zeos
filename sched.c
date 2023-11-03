@@ -146,6 +146,10 @@ void sched_next_rr()
 
 void update_process_state_rr(struct task_struct *t, struct list_head *dest)
 {
+    struct task_struct* actual = current();
+    actual->stadistics.user_ticks += get_ticks()-current()->stadistics.elapsed_total_ticks;
+    actual->stadistics.elapsed_total_ticks = get_ticks(); // Aquí el procés passa de systema a ready
+
     if (in_list(&t->list))
         list_del(&t->list);
 
@@ -168,10 +172,7 @@ void schedule()
     if (needs_sched_rr())
     {
         if (!list_empty(&readyqueue))
-        {   
-            struct task_struct* actual = current();
-            actual->stadistics.system_ticks += get_ticks()-current()->stadistics.elapsed_total_ticks; 
-            actual->stadistics.elapsed_total_ticks = get_ticks(); // Aquí el procés passa de systema a ready
+        {
             update_process_state_rr(current(), &readyqueue);
             sched_next_rr();
         }
