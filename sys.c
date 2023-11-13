@@ -174,14 +174,14 @@ void sys_exit()
     /* CODE */
     for (int pag = 0; pag < NUM_PAG_CODE; pag++)
     {
-        free_frame(page_tage[PAG_LOG_INIT_DATA+pag].bits.pbase_addr);
+        page_tage[PAG_LOG_INIT_DATA+pag].bits.pbase_addr = 0;
         page_tage[PAG_LOG_INIT_CODE+pag].entry = 0;
         page_tage[PAG_LOG_INIT_CODE+pag].bits.user = 0;
         page_tage[PAG_LOG_INIT_CODE+pag].bits.present = 0;
     }
 
     /* DATA */
-    for (int pag = 0; pag < NUM_PAG_CODE; pag++)
+    for (int pag = 0; pag < NUM_PAG_DATA; pag++)
     {
         free_frame(page_tage[PAG_LOG_INIT_DATA+pag].bits.pbase_addr);
         page_tage[PAG_LOG_INIT_DATA+pag].entry = 0;
