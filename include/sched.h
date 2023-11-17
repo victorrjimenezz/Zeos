@@ -75,4 +75,7 @@ void schedule();
 unsigned int get_quantum(struct task_struct *t);
 void set_quantum(struct task_struct *t, int new_quantum);
 
+void thread_wrapper(void (*func)(void*), void *paramaters);
+
+
 #endif  /* __SCHED_H__ */

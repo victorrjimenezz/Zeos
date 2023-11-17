@@ -118,7 +118,8 @@ void inner_task_switch(union task_union * new)
 
     tss.esp0 = (DWord) &new->stack[KERNEL_STACK_SIZE];
     writeMSR(0x175, &new->stack[KERNEL_STACK_SIZE]);
-    set_cr3(new->task.dir_pages_baseAddr);
+    if (current_tu->task.pid != new->task.pid) // Optimització comentada a classe per threads
+        set_cr3(new->task.dir_pages_baseAddr);
 
     ebp_switch(&current_tu->esp, &new->task.esp);
 }
@@ -201,3 +202,8 @@ struct task_struct* current()
   return (struct task_struct*)(ret_value&0xfffff000);
 }
 
+void thread_wrapper(void (*func)(void*), void *paramaters) 
+{
+    (*func)(paramaters);
+    exit();
+}

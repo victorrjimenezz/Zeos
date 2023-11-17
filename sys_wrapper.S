@@ -129,3 +129,29 @@ get_stats_no_err:
         movl %ebp, %esp
         popl %ebp
         ret
+
+ENTRY(threadCreateWithStack)
+        pushl %ebp
+        movl %esp, %ebp
+
+        movl 8(%ebp), %edx // Pas de paramatres
+        movl 12(%ebp), %ecx
+        movl 16(%ebp), %edx
+
+        pushl $r_threadCreate // Adreça de retorn
+        pushl %ebp // salvem el ebp d'aquesta funció
+        movl %esp, %ebp // fiquem a ebp el esp per despres tornar
+        movl $5, %eax
+        sysenter
+r_threadCreate:
+        cmpl $0, %eax // si eax < 0 hi ha un error
+        jge threadCreate_no_err // else
+
+        movl %eax, errno
+        movl $-1, %eax
+
+threadCreate_no_err:
+        popl %ebp
+        movl %ebp, %esp
+        popl %ebp
+        ret

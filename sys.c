@@ -239,3 +239,21 @@ int sys_get_stats(int pid, struct stats* st)
   update_stats(0);
   return 0;
 }
+
+int sys_threadCreateWithStack(void (*function)(void* arg), int N, void* parameter) 
+{
+    
+    // Buscar i allocatar TCB
+    
+    char* stack = memRegGet(N);
+
+    // Assignar pila de sistema
+
+    // Crear TLS 1 pàgina de tamany?
+
+    // Crear contenxt de execucio (crida a thread_wrapper)
+
+    // Inicialitzar piles? No és el mateix que lo d'adalt?
+
+    // Ficar el thread a la ready_queue
+}
